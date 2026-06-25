@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, CheckSquare, FileText, Settings, LogOut, FilePlus } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, FileText, LogOut, FilePlus } from 'lucide-react';
 import './Sidebar.css';
 
 const menuItems = [
