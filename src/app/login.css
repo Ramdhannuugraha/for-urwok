@@ -3,16 +3,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 1.5rem;
+  background: var(--bg-primary);
 }
 
 .login-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   padding: 2.5rem 2rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .login-header {
@@ -24,28 +25,23 @@
 }
 
 .login-logo {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  width: 56px;
+  height: 56px;
+  background: var(--primary);
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 1.5rem;
+  font-weight: 800;
+  font-size: 1.25rem;
   color: white;
-  margin-bottom: 1rem;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+  margin-bottom: 0.75rem;
+  box-shadow: var(--shadow-primary);
 }
 
 .login-header h2 {
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   margin: 0;
-}
-
-.text-muted {
-  color: var(--text-muted);
-  font-size: 0.9rem;
 }
 
 .login-form {
@@ -54,40 +50,42 @@
 }
 
 .login-btn {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   width: 100%;
+  padding: 0.75rem;
 }
 
 .alert {
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   text-align: center;
-  margin-bottom: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .alert-danger {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
 }
 
 .alert-success {
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  color: #6ee7b7;
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success);
 }
 
 .auth-switch {
   text-align: center;
-  margin-top: 1rem;
 }
 
 .switch-btn {
-  font-size: 0.85rem;
-  text-decoration: underline;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  transition: color var(--transition-fast);
 }
 
 .switch-btn:hover {
-  color: var(--text-main);
+  color: var(--primary);
 }
