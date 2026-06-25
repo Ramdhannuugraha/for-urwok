@@ -1,0 +1,160 @@
+.reports-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.report-controls {
+  display: flex;
+  gap: 2rem;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.control-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.control-select, .control-input {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.control-select:focus, .control-input:focus {
+  border-color: var(--primary);
+}
+
+.date-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 0 1rem;
+}
+
+.date-picker-wrapper .control-input {
+  border: none;
+  background: transparent;
+  padding: 0.6rem 0;
+}
+
+.preview-title {
+  margin-bottom: 1rem;
+  color: var(--text-main);
+}
+
+.report-preview-container {
+  margin-bottom: 4rem;
+}
+
+/* Document styling (simulates A4 paper) */
+.report-document {
+  background: white;
+  color: #1e293b;
+  width: 100%;
+  max-width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 20mm;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.report-doc-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #1e293b;
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.doc-logo {
+  width: 80px;
+  height: 80px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 1.5rem;
+}
+
+.doc-title-area h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.25rem 0;
+  text-align: center;
+}
+
+.doc-title-area h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem 0;
+  text-align: center;
+}
+
+.doc-title-area p {
+  text-align: center;
+  margin: 0;
+}
+
+.doc-section {
+  margin-bottom: 2rem;
+}
+
+.doc-section h4 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.doc-section p {
+  line-height: 1.6;
+  text-align: justify;
+}
+
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.doc-table th, .doc-table td {
+  border: 1px solid #cbd5e1;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.doc-table th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.report-doc-footer {
+  margin-top: 4rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.signature-area {
+  text-align: center;
+  width: 250px;
+}
+
+.signature-area p {
+  margin: 0 0 0.25rem 0;
+}
