@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Plus, FileText, ChevronDown, Trash2 } from 'lucide-react';
+import { Search, Plus, FileText, ChevronDown, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getActiveActivities, updateActivityStatus, deleteActivity, type Activity } from '@/lib/store';
 import './activities.css';
 
@@ -14,12 +14,16 @@ const STATUS_BADGE: Record<string, string> = {
   'Selesai': 'badge-success',
 };
 
+const PAGE_SIZE_OPTIONS = [25, 50, 100, 'Semua'] as const;
+
 export default function ActivitiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activities, setActivities] = useState<Activity[]>([]);
   const [filterKategori, setFilterKategori] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number | 'Semua'>(25);
 
   const loadData = useCallback(() => {
     setActivities(getActiveActivities());
@@ -28,6 +32,15 @@ export default function ActivitiesPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClick = () => setOpenDropdown(null);
+    if (openDropdown) {
+      document.addEventListener('click', handleClick);
+      return () => document.removeEventListener('click', handleClick);
+    }
+  }, [openDropdown]);
 
   const handleStatusChange = (id: string, newStatus: Activity['status']) => {
     updateActivityStatus(id, newStatus);
@@ -49,6 +62,26 @@ export default function ActivitiesPage() {
     return matchSearch && matchKategori && matchStatus;
   });
 
+  // Pagination logic
+  const totalItems = filtered.length;
+  const effectivePageSize = pageSize === 'Semua' ? totalItems : pageSize;
+  const totalPages = effectivePageSize > 0 ? Math.ceil(totalItems / effectivePageSize) : 1;
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * effectivePageSize;
+  const endIndex = pageSize === 'Semua' ? totalItems : Math.min(startIndex + effectivePageSize, totalItems);
+  const paginatedData = filtered.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters or page size change
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(value === 'Semua' ? 'Semua' : parseInt(value));
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (setter: (v: string) => void, value: string) => {
+    setter(value);
+    setCurrentPage(1);
+  };
+
   return (
     <div className="page-container animate-fade-in">
       <div className="page-header">
@@ -63,18 +96,20 @@ export default function ActivitiesPage() {
       </div>
 
       <div className="activities-toolbar glass-panel">
-        <div className="search-box">
-          <Search size={18} className="text-muted" />
-          <input 
-            type="text" 
-            placeholder="Cari aktivitas..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="toolbar-left">
+          <div className="search-box">
+            <Search size={18} className="text-muted" />
+            <input 
+              type="text" 
+              placeholder="Cari aktivitas..." 
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            />
+          </div>
         </div>
         
         <div className="filter-group">
-          <select className="filter-select" value={filterKategori} onChange={(e) => setFilterKategori(e.target.value)}>
+          <select className="filter-select" value={filterKategori} onChange={(e) => handleFilterChange(setFilterKategori, e.target.value)}>
             <option value="">Semua Kategori</option>
             <option value="Website">Website</option>
             <option value="Media Sosial">Media Sosial</option>
@@ -90,7 +125,7 @@ export default function ActivitiesPage() {
             <option value="Pelatihan">Pelatihan</option>
             <option value="Lainnya">Lainnya</option>
           </select>
-          <select className="filter-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+          <select className="filter-select" value={filterStatus} onChange={(e) => handleFilterChange(setFilterStatus, e.target.value)}>
             <option value="">Semua Status</option>
             <option value="Menunggu Antrian">Menunggu Antrian</option>
             <option value="Proses">Proses</option>
@@ -102,19 +137,20 @@ export default function ActivitiesPage() {
         <table className="activities-table">
           <thead>
             <tr>
+              <th style={{width: '40px'}}>No</th>
               <th>Nama Pekerjaan</th>
               <th>Kategori</th>
               <th>Unit Peminta</th>
               <th>Tanggal</th>
               <th>Prioritas</th>
               <th>Status</th>
-              <th>Aksi</th>
+              <th style={{width: '50px'}}>Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={7} className="empty-state">
+                <td colSpan={8} className="empty-state">
                   <div className="empty-content">
                     <FileText size={32} className="text-muted" />
                     <p>Belum ada aktivitas aktif</p>
@@ -125,8 +161,9 @@ export default function ActivitiesPage() {
                 </td>
               </tr>
             ) : (
-              filtered.map((activity) => (
+              paginatedData.map((activity, index) => (
                 <tr key={activity.id}>
+                  <td className="row-number">{startIndex + index + 1}</td>
                   <td>
                     <div className="activity-title-cell">
                       <span>{activity.nama_pekerjaan}</span>
@@ -147,13 +184,13 @@ export default function ActivitiesPage() {
                     <div className="status-dropdown-wrapper">
                       <button 
                         className={`status-btn badge ${STATUS_BADGE[activity.status]}`}
-                        onClick={() => setOpenDropdown(openDropdown === activity.id ? null : activity.id)}
+                        onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === activity.id ? null : activity.id); }}
                       >
                         {activity.status}
                         <ChevronDown size={12} />
                       </button>
                       {openDropdown === activity.id && (
-                        <div className="status-dropdown">
+                        <div className="status-dropdown" onClick={(e) => e.stopPropagation()}>
                           {STATUS_OPTIONS.map(s => (
                             <button 
                               key={s} 
@@ -181,6 +218,75 @@ export default function ActivitiesPage() {
             )}
           </tbody>
         </table>
+
+        {/* Pagination Footer */}
+        {totalItems > 0 && (
+          <div className="pagination-footer">
+            <div className="pagination-info">
+              <span>Menampilkan {startIndex + 1}–{endIndex} dari {totalItems} data</span>
+            </div>
+
+            <div className="pagination-controls">
+              <div className="page-size-selector">
+                <label>Tampilkan:</label>
+                <select value={pageSize.toString()} onChange={(e) => handlePageSizeChange(e.target.value)}>
+                  {PAGE_SIZE_OPTIONS.map(opt => (
+                    <option key={opt.toString()} value={opt.toString()}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+
+              {pageSize !== 'Semua' && totalPages > 1 && (
+                <div className="page-nav">
+                  <button 
+                    className="page-btn" 
+                    disabled={safeCurrentPage <= 1}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => {
+                      if (totalPages <= 7) return true;
+                      if (p === 1 || p === totalPages) return true;
+                      if (Math.abs(p - safeCurrentPage) <= 1) return true;
+                      return false;
+                    })
+                    .reduce<(number | string)[]>((acc, p, i, arr) => {
+                      if (i > 0 && typeof arr[i - 1] === 'number' && (p as number) - (arr[i - 1] as number) > 1) {
+                        acc.push('...');
+                      }
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((p, i) => (
+                      typeof p === 'string' ? (
+                        <span key={`ellipsis-${i}`} className="page-ellipsis">…</span>
+                      ) : (
+                        <button 
+                          key={p} 
+                          className={`page-btn ${p === safeCurrentPage ? 'active' : ''}`}
+                          onClick={() => setCurrentPage(p)}
+                        >
+                          {p}
+                        </button>
+                      )
+                    ))
+                  }
+                  
+                  <button 
+                    className="page-btn" 
+                    disabled={safeCurrentPage >= totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
