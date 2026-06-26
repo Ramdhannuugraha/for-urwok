@@ -2,22 +2,22 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, UploadCloud, ArrowLeft } from 'lucide-react';
+import { Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { createActivity } from '@/lib/api';
+import { createNewActivity, type Activity } from '@/lib/store';
 import './new-activity.css';
 
 export default function NewActivityPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    tanggal: '',
+    tanggal: new Date().toISOString().split('T')[0],
     unit_peminta: '',
     kategori: '',
     nama_pekerjaan: '',
     deskripsi: '',
-    status: 'Proses',
-    prioritas: 'Normal',
+    status: 'Menunggu Antrian' as Activity['status'],
+    prioritas: 'Normal' as Activity['prioritas'],
     jam_mulai: '',
     jam_selesai: '',
   });
@@ -26,17 +26,16 @@ export default function NewActivityPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const result = await createActivity(formData);
-    setLoading(false);
     
-    if (result.success) {
+    createNewActivity(formData);
+    
+    setTimeout(() => {
+      setLoading(false);
       router.push('/activities');
-    } else {
-      alert("Gagal menyimpan aktivitas. Silakan coba lagi.");
-    }
+    }, 300);
   };
 
   return (
@@ -76,7 +75,13 @@ export default function NewActivityPage() {
                 <option value="Persuratan">Persuratan</option>
                 <option value="Akademik">Akademik</option>
                 <option value="Kemahasiswaan">Kemahasiswaan</option>
+                <option value="Keuangan">Keuangan</option>
+                <option value="Kerja Sama">Kerja Sama</option>
+                <option value="Dokumentasi">Dokumentasi</option>
                 <option value="Rapat">Rapat</option>
+                <option value="Pengabdian">Pengabdian</option>
+                <option value="Penelitian">Penelitian</option>
+                <option value="Pelatihan">Pelatihan</option>
                 <option value="Lainnya">Lainnya</option>
               </select>
             </div>
@@ -102,11 +107,10 @@ export default function NewActivityPage() {
             </div>
 
             <div className="input-group">
-              <label className="input-label">Status</label>
+              <label className="input-label">Status Awal</label>
               <select className="input-field" name="status" value={formData.status} onChange={handleChange}>
+                <option value="Menunggu Antrian">Menunggu Antrian</option>
                 <option value="Proses">Proses</option>
-                <option value="Selesai">Selesai</option>
-                <option value="Tertunda">Tertunda</option>
               </select>
             </div>
 
@@ -120,23 +124,16 @@ export default function NewActivityPage() {
             </div>
           </div>
 
-          <div className="input-group" style={{marginTop: '1.5rem'}}>
-            <label className="input-label">Deskripsi / Hasil</label>
+          <div className="input-group" style={{marginTop: '0.25rem'}}>
+            <label className="input-label">Deskripsi / Catatan</label>
             <textarea 
               className="input-field" 
               name="deskripsi" 
               rows={4} 
-              placeholder="Jelaskan detail pekerjaan atau hasil yang dicapai..."
+              placeholder="Jelaskan detail pekerjaan atau catatan tambahan..."
               value={formData.deskripsi}
               onChange={handleChange}
             ></textarea>
-          </div>
-
-          <div className="upload-zone">
-            <UploadCloud size={32} className="text-muted" />
-            <p>Drag & drop file bukti pekerjaan di sini, atau <strong>klik untuk mencari</strong></p>
-            <p className="upload-help">Mendukung: PDF, JPG, PNG, DOCX (Max 10MB)</p>
-            <input type="file" className="file-input-hidden" multiple />
           </div>
 
           <div className="form-actions">

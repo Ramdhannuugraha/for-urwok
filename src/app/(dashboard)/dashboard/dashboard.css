@@ -97,6 +97,10 @@
   box-shadow: 0 0 0 3px var(--primary-bg);
 }
 
+.activity-dot.dot-green { background: var(--success); box-shadow: 0 0 0 3px var(--success-bg); }
+.activity-dot.dot-blue { background: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+.activity-dot.dot-orange { background: var(--warning); box-shadow: 0 0 0 3px var(--warning-bg); }
+
 .activity-item:not(:last-child)::after {
   content: '';
   position: absolute;

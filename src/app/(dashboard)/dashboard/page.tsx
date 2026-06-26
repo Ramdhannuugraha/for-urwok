@@ -1,27 +1,27 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Briefcase, Clock, CheckCircle, AlertCircle, ArrowUpRight } from 'lucide-react';
+import { Briefcase, Clock, CheckCircle, AlertCircle, ArrowUpRight, Hourglass } from 'lucide-react';
 import Link from 'next/link';
+import { getStats, getAllActivities, type Activity } from '@/lib/store';
 import './dashboard.css';
 
-const data = [
-  { name: 'Jan', tugas: 45 },
-  { name: 'Feb', tugas: 52 },
-  { name: 'Mar', tugas: 38 },
-  { name: 'Apr', tugas: 65 },
-  { name: 'Mei', tugas: 48 },
-  { name: 'Jun', tugas: 70 },
-];
-
-const recentActivities = [
-  { id: 1, title: 'Update Website Fakultas', desc: 'Memasukkan berita kegiatan mahasiswa', status: 'Selesai', time: 'Hari ini, 10:30' },
-  { id: 2, title: 'Desain Poster Seminar', desc: 'Membuat poster untuk seminar nasional', status: 'Proses', time: 'Hari ini, 09:15' },
-  { id: 3, title: 'Notulensi Rapat Pimpinan', desc: 'Notulensi rapat koordinasi bulanan', status: 'Selesai', time: 'Kemarin, 14:00' },
-  { id: 4, title: 'Upload Dokumen Akreditasi', desc: 'Upload berkas akreditasi prodi', status: 'Tertunda', time: 'Kemarin, 11:30' },
-];
-
 export default function DashboardPage() {
+  const [stats, setStats] = useState({ todayCount: 0, totalMonth: 0, completedMonth: 0, pendingCount: 0, prosesCount: 0, selesaiCount: 0 });
+  const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+
+  useEffect(() => {
+    setStats(getStats());
+    setRecentActivities(getAllActivities().slice(0, 5));
+  }, []);
+
+  const chartData = [
+    { name: 'Antrian', value: stats.pendingCount, fill: 'var(--warning)' },
+    { name: 'Proses', value: stats.prosesCount, fill: 'var(--primary)' },
+    { name: 'Selesai', value: stats.selesaiCount, fill: 'var(--success)' },
+  ];
+
   return (
     <div className="page-container animate-fade-in">
       <div className="page-header">
@@ -37,38 +37,38 @@ export default function DashboardPage() {
             <Briefcase size={22} />
           </div>
           <div className="stat-content">
-            <h3>12</h3>
-            <p>Pekerjaan Hari Ini</p>
+            <h3>{stats.totalMonth}</h3>
+            <p>Total Bulan Ini</p>
           </div>
         </div>
         
+        <div className="stat-card glass-panel">
+          <div className="stat-icon-wrapper warning">
+            <Hourglass size={22} />
+          </div>
+          <div className="stat-content">
+            <h3>{stats.pendingCount}</h3>
+            <p>Menunggu Antrian</p>
+          </div>
+        </div>
+
+        <div className="stat-card glass-panel">
+          <div className="stat-icon-wrapper primary">
+            <Clock size={22} />
+          </div>
+          <div className="stat-content">
+            <h3>{stats.prosesCount}</h3>
+            <p>Sedang Proses</p>
+          </div>
+        </div>
+
         <div className="stat-card glass-panel">
           <div className="stat-icon-wrapper success">
             <CheckCircle size={22} />
           </div>
           <div className="stat-content">
-            <h3>48</h3>
-            <p>Selesai Bulan Ini</p>
-          </div>
-        </div>
-
-        <div className="stat-card glass-panel">
-          <div className="stat-icon-wrapper warning">
-            <Clock size={22} />
-          </div>
-          <div className="stat-content">
-            <h3>124</h3>
-            <p>Jam Produktif</p>
-          </div>
-        </div>
-
-        <div className="stat-card glass-panel">
-          <div className="stat-icon-wrapper danger">
-            <AlertCircle size={22} />
-          </div>
-          <div className="stat-content">
-            <h3>3</h3>
-            <p>Pekerjaan Tertunda</p>
+            <h3>{stats.selesaiCount}</h3>
+            <p>Selesai</p>
           </div>
         </div>
       </div>
@@ -76,14 +76,14 @@ export default function DashboardPage() {
       <div className="dashboard-grid">
         <div className="glass-panel">
           <div className="card-header">
-            <h3>Grafik Pekerjaan Bulanan</h3>
+            <h3>Ringkasan Status</h3>
           </div>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} barCategoryGap="25%">
+              <BarChart data={chartData} barCategoryGap="30%">
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip 
                   cursor={{fill: 'var(--bg-hover)', radius: 8}}
                   contentStyle={{ 
@@ -95,13 +95,7 @@ export default function DashboardPage() {
                     fontSize: '0.8125rem',
                   }} 
                 />
-                <Bar dataKey="tugas" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
-                <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-bar)" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="var(--chart-bar-end)" stopOpacity={0.6}/>
-                  </linearGradient>
-                </defs>
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="var(--primary)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -115,24 +109,32 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="activity-list">
-            {recentActivities.map((item) => (
-              <div key={item.id} className="activity-item">
-                <div className="activity-dot"></div>
-                <div className="activity-info">
-                  <h4>{item.title}</h4>
-                  <p>{item.desc}</p>
-                </div>
-                <div className="activity-meta">
-                  <span className={`badge ${
-                    item.status === 'Selesai' ? 'badge-success' : 
-                    item.status === 'Proses' ? 'badge-primary' : 'badge-warning'
-                  }`}>
-                    {item.status}
-                  </span>
-                  <span className="activity-time">{item.time}</span>
-                </div>
+            {recentActivities.length === 0 ? (
+              <div style={{textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)', fontSize: '0.875rem'}}>
+                Belum ada aktivitas. Mulai tambahkan pekerjaan Anda!
               </div>
-            ))}
+            ) : (
+              recentActivities.map((item) => (
+                <div key={item.id} className="activity-item">
+                  <div className={`activity-dot ${
+                    item.status === 'Selesai' ? 'dot-green' : 
+                    item.status === 'Proses' ? 'dot-blue' : 'dot-orange'
+                  }`}></div>
+                  <div className="activity-info">
+                    <h4>{item.nama_pekerjaan}</h4>
+                    <p>{item.kategori} · {item.tanggal}</p>
+                  </div>
+                  <div className="activity-meta">
+                    <span className={`badge ${
+                      item.status === 'Selesai' ? 'badge-success' : 
+                      item.status === 'Proses' ? 'badge-primary' : 'badge-warning'
+                    }`}>
+                      {item.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

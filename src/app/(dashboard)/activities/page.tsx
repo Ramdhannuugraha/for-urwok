@@ -1,36 +1,60 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Plus, Filter, MoreVertical, FileText } from 'lucide-react';
-import { getActivities } from '@/lib/api';
+import { Search, Plus, FileText, ChevronDown, Trash2 } from 'lucide-react';
+import { getActiveActivities, updateActivityStatus, deleteActivity, type Activity } from '@/lib/store';
 import './activities.css';
+
+const STATUS_OPTIONS: Activity['status'][] = ['Menunggu Antrian', 'Proses', 'Selesai'];
+
+const STATUS_BADGE: Record<string, string> = {
+  'Menunggu Antrian': 'badge-warning',
+  'Proses': 'badge-primary',
+  'Selesai': 'badge-success',
+};
 
 export default function ActivitiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activities, setActivities] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [filterKategori, setFilterKategori] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchActivities = async () => {
-      setLoading(true);
-      const data = await getActivities();
-      setActivities(data);
-      setLoading(false);
-    };
-    fetchActivities();
+  const loadData = useCallback(() => {
+    setActivities(getActiveActivities());
   }, []);
 
-  const filteredActivities = activities.filter(a => 
-    a.nama_pekerjaan.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleStatusChange = (id: string, newStatus: Activity['status']) => {
+    updateActivityStatus(id, newStatus);
+    loadData();
+    setOpenDropdown(null);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Yakin ingin menghapus aktivitas ini?')) {
+      deleteActivity(id);
+      loadData();
+    }
+  };
+
+  const filtered = activities.filter(a => {
+    const matchSearch = a.nama_pekerjaan.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchKategori = !filterKategori || a.kategori === filterKategori;
+    const matchStatus = !filterStatus || a.status === filterStatus;
+    return matchSearch && matchKategori && matchStatus;
+  });
 
   return (
     <div className="page-container animate-fade-in">
       <div className="page-header">
         <div>
           <h1>Aktivitas Kerja</h1>
-          <p className="text-muted">Kelola dan pantau semua tugas Anda</p>
+          <p className="text-muted">Kelola daftar pekerjaan aktif Anda — ubah status sesuai progres</p>
         </div>
         <Link href="/activities/new" className="btn btn-primary">
           <Plus size={18} />
@@ -50,20 +74,26 @@ export default function ActivitiesPage() {
         </div>
         
         <div className="filter-group">
-          <button className="btn btn-outline filter-btn">
-            <Filter size={16} /> Filter
-          </button>
-          <select className="filter-select">
+          <select className="filter-select" value={filterKategori} onChange={(e) => setFilterKategori(e.target.value)}>
             <option value="">Semua Kategori</option>
             <option value="Website">Website</option>
             <option value="Media Sosial">Media Sosial</option>
+            <option value="Persuratan">Persuratan</option>
+            <option value="Akademik">Akademik</option>
+            <option value="Kemahasiswaan">Kemahasiswaan</option>
+            <option value="Keuangan">Keuangan</option>
+            <option value="Kerja Sama">Kerja Sama</option>
+            <option value="Dokumentasi">Dokumentasi</option>
             <option value="Rapat">Rapat</option>
+            <option value="Pengabdian">Pengabdian</option>
+            <option value="Penelitian">Penelitian</option>
+            <option value="Pelatihan">Pelatihan</option>
+            <option value="Lainnya">Lainnya</option>
           </select>
-          <select className="filter-select">
+          <select className="filter-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
             <option value="">Semua Status</option>
-            <option value="Selesai">Selesai</option>
+            <option value="Menunggu Antrian">Menunggu Antrian</option>
             <option value="Proses">Proses</option>
-            <option value="Tertunda">Tertunda</option>
           </select>
         </div>
       </div>
@@ -76,47 +106,74 @@ export default function ActivitiesPage() {
               <th>Kategori</th>
               <th>Unit Peminta</th>
               <th>Tanggal</th>
-              <th>Status</th>
               <th>Prioritas</th>
+              <th>Status</th>
               <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr><td colSpan={7} style={{textAlign: 'center', padding: '2rem'}}>Memuat data...</td></tr>
-            ) : filteredActivities.length === 0 ? (
-              <tr><td colSpan={7} style={{textAlign: 'center', padding: '2rem'}}>Belum ada aktivitas ditemukan</td></tr>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="empty-state">
+                  <div className="empty-content">
+                    <FileText size={32} className="text-muted" />
+                    <p>Belum ada aktivitas aktif</p>
+                    <Link href="/activities/new" className="btn btn-primary" style={{marginTop: '0.5rem', fontSize: '0.8125rem'}}>
+                      <Plus size={16} /> Tambah Aktivitas Pertama
+                    </Link>
+                  </div>
+                </td>
+              </tr>
             ) : (
-              filteredActivities.map((activity) => (
+              filtered.map((activity) => (
                 <tr key={activity.id}>
                   <td>
                     <div className="activity-title-cell">
-                      <FileText size={16} className="text-muted" />
                       <span>{activity.nama_pekerjaan}</span>
                     </div>
                   </td>
                   <td><span className="category-tag">{activity.kategori}</span></td>
-                  <td>{activity.unit_peminta}</td>
-                  <td>{activity.tanggal}</td>
-                  <td>
-                    <span className={`badge ${
-                      activity.status === 'Selesai' ? 'badge-success' : 
-                      activity.status === 'Proses' ? 'badge-primary' : 'badge-warning'
-                    }`}>
-                      {activity.status}
-                    </span>
-                  </td>
+                  <td className="text-secondary">{activity.unit_peminta || '-'}</td>
+                  <td className="text-secondary">{activity.tanggal}</td>
                   <td>
                     <span className={
                       activity.prioritas === 'Tinggi' ? 'text-danger fw-bold' : 
-                      activity.prioritas === 'Normal' ? 'text-success' : 'text-muted'
+                      activity.prioritas === 'Normal' ? 'text-secondary' : 'text-muted'
                     }>
                       {activity.prioritas}
                     </span>
                   </td>
                   <td>
-                    <button className="icon-btn action-btn">
-                      <MoreVertical size={18} />
+                    <div className="status-dropdown-wrapper">
+                      <button 
+                        className={`status-btn badge ${STATUS_BADGE[activity.status]}`}
+                        onClick={() => setOpenDropdown(openDropdown === activity.id ? null : activity.id)}
+                      >
+                        {activity.status}
+                        <ChevronDown size={12} />
+                      </button>
+                      {openDropdown === activity.id && (
+                        <div className="status-dropdown">
+                          {STATUS_OPTIONS.map(s => (
+                            <button 
+                              key={s} 
+                              className={`status-option ${s === activity.status ? 'active' : ''}`}
+                              onClick={() => handleStatusChange(activity.id, s)}
+                            >
+                              <span className={`status-dot ${
+                                s === 'Selesai' ? 'dot-success' : 
+                                s === 'Proses' ? 'dot-primary' : 'dot-warning'
+                              }`}></span>
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <button className="icon-btn action-btn" onClick={() => handleDelete(activity.id)} title="Hapus">
+                      <Trash2 size={16} />
                     </button>
                   </td>
                 </tr>
